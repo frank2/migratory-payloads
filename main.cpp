@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 
    proc_array_bytes += sizeof(DWORD) * 16;
    
-   DWORD *proc_array = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, proc_array_bytes);
+   DWORD *proc_array = (DWORD *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, proc_array_bytes);
    assert(EnumProcesses(proc_array, proc_array_bytes, &proc_array_bytes));
    /* open pid with PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_VM_WRITE
     * allocate space for our executable
