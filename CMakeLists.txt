@@ -7,4 +7,4 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_executable(sheep_monitor main.cpp)
-target_linker_options(sheep_monitor PRIVATE "/NODEFAULTLIB")
+target_link_options(sheep_monitor PRIVATE "/NODEFAULTLIB")
