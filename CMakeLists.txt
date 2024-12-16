@@ -11,4 +11,4 @@ string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 
 add_executable(sheep_monitor main.cpp)
-target_link_options(sheep_monitor PRIVATE "/NODEFAULTLIB" "/ENTRY:main" "/GS-")
+target_compile_options(sheep_monitor PRIVATE "/GS-")
