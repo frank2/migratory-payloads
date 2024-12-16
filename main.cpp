@@ -138,7 +138,8 @@ int main(int argc, char *argv[]) {
       assert(found_pid != -1);
 
       /* open pid with PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_VM_WRITE */
-      HANDLE explorer_proc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, found_pid);
+      HANDLE explorer_proc = OpenProcess(PROCESS_VM_READ | PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_VM_WRITE, FALSE, found_pid);
+      DWORD error = GetLastError();
       assert(explorer_proc != nullptr);
       
       /* allocate space for our executable */
