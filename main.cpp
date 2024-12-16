@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
          ++j;
 
          if (std::strncmp(&filename[j], "explorer.exe", std::strlen("explorer.exe")) == 0) {
-            found_pid = i;
+            found_pid = proc_array[i];
             break;
          }
       }
