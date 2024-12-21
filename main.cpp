@@ -28,7 +28,7 @@ VOID WINAPI get_fresh_image(PVOID instance, DWORD reason, PVOID reserved) {
 
    std::uint8_t *self_u8 = (std::uint8_t *)instance;
    PIMAGE_NT_HEADERS64 nt_headers = get_nt_headers(self_u8);
-   FRESH_IMAGE = (std::uint8_t *)HeapAlloc(GetProcessHeap, HEAP_ZERO_MEMORY, nt_headers->OptionalHeader.SizeOfImage);
+   FRESH_IMAGE = (std::uint8_t *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nt_headers->OptionalHeader.SizeOfImage);
    std::memcpy(FRESH_IMAGE, self_u8, nt_headers->OptionalHeader.SizeOfImage);
 }
 
