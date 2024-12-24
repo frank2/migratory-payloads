@@ -215,7 +215,7 @@ bool download_url(const wchar_t *domain, const wchar_t *url, const char *filenam
 
    DWORD bytes_written;
 
-   if (!WriteFile(sheep_handle, &out_buff, out_buff.size(), &bytes_written, nullptr)) {
+   if (!WriteFile(sheep_handle, &out_buff[0], out_buff.size(), &bytes_written, nullptr)) {
       CloseHandle(sheep_handle);
       return false;
    }
