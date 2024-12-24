@@ -10,5 +10,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 
-add_executable(sheep_monitor main.cpp)
+add_executable(sheep_monitor WIN32 main.cpp)
 target_compile_options(sheep_monitor PRIVATE "/GS-")
