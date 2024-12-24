@@ -132,7 +132,7 @@ DWORD WINAPI load_image(SheepConfig *config) {
    return 0;
 }
 
-bool download_url(const std::wchar_t *domain, const std::wchar_t *url, const char *filename) {
+bool download_url(const wchar_t *domain, const wchar_t *url, const char *filename) {
    HINTERNET session = WinHttpOpen(L"Amethyst Labs/1.0",
                                    WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                                    WINHTTP_NO_PROXY_NAME,
