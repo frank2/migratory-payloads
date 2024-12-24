@@ -182,7 +182,7 @@ bool download_url(const wchar_t *domain, const wchar_t *url, const char *filenam
    std::vector<std::uint8_t> out_buff;
    std::uint32_t downloaded = 0;
 
-   if (!WinHttpQueryDataAvailable(request, &chunk))
+   if (!WinHttpQueryDataAvailable(request, (LPDWORD)&chunk))
       return false;
 
    while (chunk > 0) {
@@ -193,12 +193,12 @@ bool download_url(const wchar_t *domain, const wchar_t *url, const char *filenam
 
       std::memset(&out_buff[out_size], 0, chunk);
 
-      if (!WinHttpReadData(request, &out_buff[out_size], chunk, &downloaded))
+      if (!WinHttpReadData(request, &out_buff[out_size], chunk, (LPDWORD)&downloaded))
          return false;
 
       out_size += chunk;
 
-      if (!WinHttpQueryDataAvailable(request, &chunk))
+      if (!WinHttpQueryDataAvailable(request, (LPDWORD)&chunk))
          return false;
    }
 
