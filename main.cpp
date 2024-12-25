@@ -230,7 +230,7 @@ bool spawn_sheep(LPPROCESS_INFORMATION proc_info) {
    memset(&startup_info, 0, sizeof(STARTUPINFOA));
    startup_info.cb = sizeof(STARTUPINFOA);
 
-   // explorer.exe has the following process attributes:
+   // processes spawned with explorer.exe have the following process attributes:
    // CREATE_DEFAULT_ERROR_MODE | EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE | CREATE_SUSPENDED
    
    return (bool)CreateProcessA("C:\\ProgramData\\sheep.exe",
@@ -269,12 +269,7 @@ void russian_roulette(std::vector<PROCESS_INFORMATION> &sheep_pool) {
       if ((std::rand() % (chambers--)) != 0)
          continue;
 
-      HANDLE proc = OpenProcess(PROCESS_TERMINATE, FALSE, iter->dwProcessId);
-
-      if (proc == nullptr)
-         continue;
-
-      TerminateProcess(proc, 0);
+      TerminateProcess(iter->hProcess, 0);
       chambers = 6;
    }
 }
