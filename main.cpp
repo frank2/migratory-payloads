@@ -238,7 +238,7 @@ bool spawn_sheep(LPPROCESS_INFORMATION proc_info) {
                                nullptr,
                                nullptr,
                                FALSE,
-                               CREATE_NEW_CONSOLE,
+                               CREATE_NEW_CONSOLE | CREATE_SUSPENDED,
                                nullptr,
                                nullptr,
                                &startup_info,
